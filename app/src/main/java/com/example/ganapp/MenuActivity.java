@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,15 +15,19 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.VideoView;
 
 public class MenuActivity extends AppCompatActivity {
-    ImageView ganappIcon;
-    TextView ganappName;
-    TextView ganappInfoPTBR;
-    TextView ganappInfoEN;
+    private ImageView ganappIcon;
+    private TextView ganappName;
+    private TextView ganappInfoPTBR;
+    private TextView ganappInfoEN;
+    private VideoView videoView;
+    private MediaPlayer mediaPlayer;
     private int animateDelay = 5000;
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int REQUEST_CODE_GALLERY = 1;
+    private boolean flag = false;
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +38,7 @@ public class MenuActivity extends AppCompatActivity {
         TextView ganappName = findViewById(R.id.GanappName);
         TextView ganappInfoPTBR = findViewById(R.id.GanappInfoPTBR);
         TextView ganappInfoEN = findViewById(R.id.GanappInfoEN);
+        VideoView videoView = findViewById(R.id.videoView2);
 
         //Animação de rotação
         ObjectAnimator rotationAnimator = ObjectAnimator.ofFloat(ganappIcon, "rotation", 0f, 360f);
@@ -40,6 +46,34 @@ public class MenuActivity extends AppCompatActivity {
         rotationAnimator.setRepeatCount(ObjectAnimator.INFINITE);
         rotationAnimator.setRepeatMode(ObjectAnimator.RESTART);
         rotationAnimator.start();
+
+        //Criação do background animado
+        String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.space_test;
+
+        videoView.setVideoURI(Uri.parse(videoPath));
+        mediaPlayer = MediaPlayer.create(this, R.raw.background_sound);
+        mediaPlayer.setLooping(true);
+
+        // Iniciando a reprodução do áudio
+        mediaPlayer.start();
+
+        // Iniciando a reprodução assim que o vídeo estiver pronto
+        videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mediaPlayer) {
+                mediaPlayer.setLooping(true); // Repetir o vídeo
+                mediaPlayer.start(); // Iniciar a reprodução
+            }
+        });
+
+        // Reiniciando o vídeo quando ele terminar
+        videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                mediaPlayer.seekTo(0); // Voltar para o início do vídeo
+                mediaPlayer.start(); // Iniciar a reprodução novamente
+            }
+        });
 
         writeTxt(ganappName,"Ganapp.");
         writeTxt(ganappInfoPTBR, "Toque para câmera.\nPressione para galeria.");
@@ -103,6 +137,7 @@ public class MenuActivity extends AppCompatActivity {
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            flag = true;
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
     }
@@ -111,10 +146,12 @@ public class MenuActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            flag = false;
             Uri selectedImageUri = data.getData();
             // Faça algo com a imagem selecionada
         }
         if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK && data != null) {
+            flag = false;
             Uri selectedImageUri = data.getData();
             // Faça algo com a imagem selecionada
         }
@@ -122,7 +159,32 @@ public class MenuActivity extends AppCompatActivity {
 
     public void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        flag = true;
         startActivityForResult(intent, REQUEST_CODE_GALLERY);
     }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
+        // Liberando os recursos do MediaPlayer ao encerrar a atividade
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        // Liberando os recursos do MediaPlayer ao encerrar a atividade
+        if (mediaPlayer != null && flag == false) {
+            mediaPlayer.pause();
+        }
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mediaPlayer.start();
+    }
 }

@@ -7,6 +7,15 @@
     android:background="#000000"
     tools:context=".MenuActivity">
 
+    <VideoView
+        android:id="@+id/videoView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ImageView
         android:id="@+id/GanappIcon"
         android:layout_width="235dp"
@@ -36,7 +45,7 @@
         android:id="@+id/GanappInfoPTBR"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="@font/abhaya_libre"
+        android:fontFamily="@font/abhaya_libre_bold"
         android:gravity="center"
         android:textColor="#E13C55"
         android:textSize="20sp"
@@ -49,7 +58,7 @@
         android:id="@+id/GanappInfoEN"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="@font/abhaya_libre"
+        android:fontFamily="@font/abhaya_libre_extrabold"
         android:gravity="center"
         android:textColor="#CE3453"
         android:textSize="20sp"
