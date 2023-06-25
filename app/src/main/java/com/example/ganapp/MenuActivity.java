@@ -2,7 +2,7 @@ package com.example.ganapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.animation.ObjectAnimator;
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.media.MediaPlayer;
@@ -18,21 +18,33 @@ import android.widget.TextView;
 import android.widget.VideoView;
 
 public class MenuActivity extends AppCompatActivity {
+
+    //defining the attributes from this layout
     private ImageView ganappIcon;
     private TextView ganappName;
     private TextView ganappInfoPTBR;
     private TextView ganappInfoEN;
     private VideoView videoView;
+
+    //defining code variables
     private MediaPlayer mediaPlayer;
     private int animateDelay = 5000;
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int REQUEST_CODE_GALLERY = 1;
     private boolean flag = false;
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //request device permissions
+        requestPermissions(new String[]{android.Manifest.permission.CAMERA, android.Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+
+        //make this activity fullscreen
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        //binding layout and yours widgets
         setContentView(R.layout.activity_menu);
         ImageView ganappIcon = findViewById(R.id.GanappIcon);
         TextView ganappName = findViewById(R.id.GanappName);
@@ -40,45 +52,22 @@ public class MenuActivity extends AppCompatActivity {
         TextView ganappInfoEN = findViewById(R.id.GanappInfoEN);
         VideoView videoView = findViewById(R.id.videoView2);
 
-        //Animação de rotação
-        ObjectAnimator rotationAnimator = ObjectAnimator.ofFloat(ganappIcon, "rotation", 0f, 360f);
-        rotationAnimator.setDuration(animateDelay);
-        rotationAnimator.setRepeatCount(ObjectAnimator.INFINITE);
-        rotationAnimator.setRepeatMode(ObjectAnimator.RESTART);
-        rotationAnimator.start();
+        //Calling the animate class
+        AnimateWindow anim = new AnimateWindow();
+        anim.animateWindow(ganappIcon, videoView, animateDelay);
 
-        //Criação do background animado
-        String videoPath = "android.resource://" + getPackageName() + "/" + R.raw.space_test;
+        //Calling the animate writing class
+        WritingMachine write = new WritingMachine();
+        write.writeMachine(ganappName,"Ganapp.", animateDelay);
+        write.writeMachine(ganappInfoPTBR,"Toque para câmera.\nPressione para galeria.", animateDelay);
+        write.writeMachine(ganappInfoEN,"Touch to camera.\nPress to gallery.", animateDelay);
 
-        videoView.setVideoURI(Uri.parse(videoPath));
+        //Starts background soundtrack
         mediaPlayer = MediaPlayer.create(this, R.raw.background_sound);
         mediaPlayer.setLooping(true);
-
-        // Iniciando a reprodução do áudio
         mediaPlayer.start();
 
-        // Iniciando a reprodução assim que o vídeo estiver pronto
-        videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mediaPlayer) {
-                mediaPlayer.setLooping(true); // Repetir o vídeo
-                mediaPlayer.start(); // Iniciar a reprodução
-            }
-        });
-
-        // Reiniciando o vídeo quando ele terminar
-        videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                mediaPlayer.seekTo(0); // Voltar para o início do vídeo
-                mediaPlayer.start(); // Iniciar a reprodução novamente
-            }
-        });
-
-        writeTxt(ganappName,"Ganapp.");
-        writeTxt(ganappInfoPTBR, "Toque para câmera.\nPressione para galeria.");
-        writeTxt(ganappInfoEN, "Touch to camera.\nPress to gallery.");
-
+        //Method to quick click and long click
         ganappIcon.setOnTouchListener(new View.OnTouchListener() {
             private Handler longClickHandler = new Handler();
             private boolean isLongClick = false;
@@ -88,7 +77,7 @@ public class MenuActivity extends AppCompatActivity {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         isLongClick = false;
-                        longClickHandler.postDelayed(longClickRunnable, 500); // Tempo em milissegundos para considerar como um long click
+                        longClickHandler.postDelayed(longClickRunnable, 500); // time for a long click
                         return true;
                     case MotionEvent.ACTION_UP:
                         longClickHandler.removeCallbacks(longClickRunnable);
@@ -103,7 +92,6 @@ public class MenuActivity extends AppCompatActivity {
                 }
                 return false;
             }
-
             private Runnable longClickRunnable = new Runnable() {
                 @Override
                 public void run() {
@@ -117,23 +105,8 @@ public class MenuActivity extends AppCompatActivity {
             };
         });
     }
-    public void writeTxt(TextView id, String name){
-        final int nameLength = name.length();
-        final long delayBetweenChar = animateDelay/nameLength;
-        final Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            private int counter = 0;
 
-            @Override
-            public void run() {
-                if (counter < nameLength) {
-                    id.setText(name.substring(0, counter + 1));
-                    counter++;
-                    handler.postDelayed(this, delayBetweenChar);
-                }
-            }
-        }, delayBetweenChar);
-    }
+    //Function to open camera
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
@@ -141,32 +114,33 @@ public class MenuActivity extends AppCompatActivity {
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
     }
+    //Function to open gallery
+    public void openGallery() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        flag = true;
+        startActivityForResult(intent, REQUEST_CODE_GALLERY);
+    }
 
+    //Function to return the picture
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             flag = false;
             Uri selectedImageUri = data.getData();
-            // Faça algo com a imagem selecionada
+            //Make something with the picture
         }
         if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK && data != null) {
             flag = false;
             Uri selectedImageUri = data.getData();
-            // Faça algo com a imagem selecionada
+            //Make something with the picture
         }
     }
-
-    public void openGallery() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        flag = true;
-        startActivityForResult(intent, REQUEST_CODE_GALLERY);
-    }
+    //default app functions
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        // Liberando os recursos do MediaPlayer ao encerrar a atividade
+        //Finish the soundtrack
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.release();
@@ -177,7 +151,7 @@ public class MenuActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
 
-        // Liberando os recursos do MediaPlayer ao encerrar a atividade
+        //Pause soundtrack
         if (mediaPlayer != null && flag == false) {
             mediaPlayer.pause();
         }
@@ -185,6 +159,7 @@ public class MenuActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        //Play soundtrack
         mediaPlayer.start();
     }
 }
