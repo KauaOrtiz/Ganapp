@@ -2,16 +2,16 @@ package com.example.ganapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -21,6 +21,8 @@ public class MenuActivity extends AppCompatActivity {
     TextView ganappInfoPTBR;
     TextView ganappInfoEN;
     private int animateDelay = 5000;
+    private static final int REQUEST_IMAGE_CAPTURE = 1;
+    private static final int REQUEST_CODE_GALLERY = 1;
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,10 +59,11 @@ public class MenuActivity extends AppCompatActivity {
                     case MotionEvent.ACTION_UP:
                         longClickHandler.removeCallbacks(longClickRunnable);
                         if (!isLongClick) {
-                            Intent intent = new Intent(MenuActivity.this, CameraActivity.class);
-                            startActivity(intent);
-                            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-                            finish();
+                            dispatchTakePictureIntent();
+                            //Intent intent = new Intent(MenuActivity.this, Broker.class);
+                            //startActivity(intent);
+                            //overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+                            //finish();
                         }
                         return true;
                 }
@@ -71,10 +74,11 @@ public class MenuActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     isLongClick = true;
-                    Intent intent = new Intent(MenuActivity.this, GalleryActivity.class);
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-                    finish();
+                    openGallery();
+                    //Intent intent = new Intent(MenuActivity.this, Broker.class);
+                    //startActivity(intent);
+                    //overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+                    //finish();
                 }
             };
         });
@@ -96,4 +100,29 @@ public class MenuActivity extends AppCompatActivity {
             }
         }, delayBetweenChar);
     }
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Uri selectedImageUri = data.getData();
+            // Faça algo com a imagem selecionada
+        }
+        if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK && data != null) {
+            Uri selectedImageUri = data.getData();
+            // Faça algo com a imagem selecionada
+        }
+    }
+
+    public void openGallery() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, REQUEST_CODE_GALLERY);
+    }
+
 }

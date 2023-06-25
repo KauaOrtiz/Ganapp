@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0A0120"
+    android:background="#000000"
     tools:context=".MenuActivity">
 
     <ImageView
@@ -17,14 +17,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.00999999"
-        app:srcCompat="@drawable/logotype" />
+        app:srcCompat="@drawable/logotype_removebg" />
 
     <TextView
         android:id="@+id/GanappName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="@font/abril_fatface"
-        android:textColor="#F7C271"
+        android:textColor="#FFE43E"
         android:textSize="34sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -36,9 +36,9 @@
         android:id="@+id/GanappInfoPTBR"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="@font/advent_pro"
+        android:fontFamily="@font/abhaya_libre"
         android:gravity="center"
-        android:textColor="#CE3453"
+        android:textColor="#E13C55"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -49,7 +49,7 @@
         android:id="@+id/GanappInfoEN"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="@font/advent_pro"
+        android:fontFamily="@font/abhaya_libre"
         android:gravity="center"
         android:textColor="#CE3453"
         android:textSize="20sp"
@@ -58,4 +58,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.61" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
