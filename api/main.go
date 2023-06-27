@@ -6,9 +6,19 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/KauaOrtiz/Ganapp/tree/master/api/database"
 )
 
 func main() {
+	db := database.GetInstance()
+
+	user := database.User{
+		Name: "João", Password: "senha",
+	}
+
+	db.CreateUser(user)
+
 	fmt.Println("Listening")
 	createImageHandler := http.HandlerFunc(createImage)
 	getHandler := http.HandlerFunc(get)
