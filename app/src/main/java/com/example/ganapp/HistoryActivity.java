@@ -1,49 +1,100 @@
 package com.example.ganapp;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
-import android.view.View;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Handler;
+import android.util.Base64;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
-import java.util.ArrayList;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.util.List;
+import java.util.ArrayList;
 
-public class HistoryActivity extends AppCompatActivity {
+public class HistoryActivity extends AppCompatActivity implements HttpRequestGetHistory.OnResponseReceivedListener {
+    private static final String TAG = "MainActivity";
+    List<ListItem> items;
+    ListView listView;
+    ArrayAdapter<ListItem> adapter;
 
-    List<String> opcoes;
-    ListView list_view;
-    ArrayAdapter<String> opcoes_arr;
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_history);
 
-        list_view = findViewById(R.id.list_view);
+        listView = findViewById(R.id.list_view);
+        items = new ArrayList<>();
 
-        opcoes = new ArrayList<String>();
+        adapter = new ArrayAdapter<ListItem>(this, R.layout.activity_history_item, R.id.textView, items) {
+            @NonNull
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                if (convertView == null) {
+                    convertView = LayoutInflater.from(getContext()).inflate(R.layout.activity_history_item, parent, false);
+                }
 
-        opcoes.add("Navegar na Internet");
-        opcoes.add("Fazer uma ligação");
-        opcoes.add("Sobre");
-        opcoes.add("Sair");
-        opcoes_arr = new ArrayAdapter<String>(this, R.layout.activity_history_item, R.id.text1, opcoes);
-        list_view.setAdapter(opcoes_arr);
-        list_view.setClickable(true);
+                ImageView imageView = convertView.findViewById(R.id.imageView);
+                TextView textView = convertView.findViewById(R.id.textView);
 
-        list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                ListItem listItem = getItem(position);
+
+                if (listItem != null) {
+                    imageView.setImageBitmap(listItem.getImage());
+                    textView.setText(listItem.getText());
+                }
+
+                return convertView;
+            }
+        };
+
+        listView.setAdapter(adapter);
+        listView.setClickable(true);
+
+        // Create an instance of HttpRequestGetHistory and pass 'this' as the listener
+        HttpRequestGetHistory httpRequest = new HttpRequestGetHistory(this);
+
+        // Execute the HTTP GET request
+        httpRequest.execute();
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long l) {
-                Intent intent = new Intent(HistoryActivity.this, LoadingScreen.class);
+                Intent intent = new Intent(HistoryActivity.this, MenuActivity.class);
                 startActivity(intent);
             }
         });
+    }
+
+    @Override
+    public void onResponseReceived(String response) {
+        // Handle the received response here
+        if (response != null) {
+            Log.d(TAG, "Received response: " + response);
+            final String pureBase64Encoded = response.substring(response.indexOf(",")  + 1);
+            byte[] bytes = Base64.decode(pureBase64Encoded, Base64.DEFAULT);
+
+            // Initialize bitmap
+            Bitmap decodedByte = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+
+            // Add the item to the list
+            items.add(new ListItem(decodedByte, "Example Text"));
+
+            // Notify the adapter that the data has changed
+            adapter.notifyDataSetChanged();
+        } else {
+            Log.e(TAG, "Received null response");
+            // Handle the case when the response is null
+        }
     }
 }
