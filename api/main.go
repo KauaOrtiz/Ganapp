@@ -8,25 +8,75 @@ import (
 	"os"
 
 	"github.com/KauaOrtiz/Ganapp/tree/master/api/database"
+	"github.com/KauaOrtiz/Ganapp/tree/master/api/services"
 )
 
+var db database.Database
+
 func main() {
-	db := database.GetInstance()
-
-	user := database.User{
-		Name: "João", Password: "senha",
-	}
-
-	db.CreateUser(user)
+	db = database.GetInstance()
 
 	fmt.Println("Listening")
-	createImageHandler := http.HandlerFunc(createImage)
-	getHandler := http.HandlerFunc(get)
+	// createImageHandler := http.HandlerFunc(createImage)
+	// getHandler := http.HandlerFunc(get)
+	getImageHandler := http.HandlerFunc(getImage)
 
-	http.Handle("/image", createImageHandler)
-	http.Handle("/json", getHandler)
+	// createUserHandler := http.HandlerFunc(createUser)
+	// loginUserHandler := http.HandlerFunc(loginUser)
+
+	// http.Handle("/image", createImageHandler)
+	// http.Handle("/json", getHandler)
+	http.Handle("/getImage", getImageHandler)
+
+	// http.Handle("/createUser", createUserHandler)
+	// http.Handle("/loginUser", loginUserHandler)
 
 	http.ListenAndServe(":8080", nil)
+}
+
+func createUser(w http.ResponseWriter, request *http.Request) {
+	var user database.User
+	err := json.NewDecoder(request.Body).Decode(&user)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	message, err := services.CreateUser(user.Name, user.Password, &db)
+
+	if err != nil {
+		http.Error(w, message, http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	w.Write([]byte(message))
+}
+
+func loginUser(w http.ResponseWriter, request *http.Request) {
+	var user database.User
+	err := json.NewDecoder(request.Body).Decode(&user)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println(user.Password)
+
+	message, loggedUser, err := services.LoginUser(user.Name, user.Password, &db)
+
+	if err != nil {
+		http.Error(w, message, http.StatusBadRequest)
+		return
+	}
+
+	response := make(map[string]string)
+	response["name"] = loggedUser.Name
+	response["password"] = loggedUser.Password
+
+	json, _ := json.Marshal(response)
+
+	w.Write([]byte(json))
 }
 
 func createImage(w http.ResponseWriter, request *http.Request) {
@@ -42,7 +92,7 @@ func createImage(w http.ResponseWriter, request *http.Request) {
 		return
 	}
 	tmpfile, err := os.Create("./" + h.Filename)
-	defer tmpfile.Close()
+	// defer tmpfile.Close()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -58,7 +108,6 @@ func createImage(w http.ResponseWriter, request *http.Request) {
 	w.Write(tmpImg)
 	fmt.Print("Hereee")
 	//w.WriteHeader(200)
-	return
 }
 
 func get(w http.ResponseWriter, request *http.Request) {
@@ -74,4 +123,15 @@ func get(w http.ResponseWriter, request *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	// w.Header().Set("Content-Type", "application/octet-stream")
 	w.Write(json)
+}
+
+func getImage(w http.ResponseWriter, r *http.Request) {
+	ImageString, err := os.ReadFile("./testImage.txt")
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte(ImageString))
 }

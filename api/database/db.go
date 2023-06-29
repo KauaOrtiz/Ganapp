@@ -14,32 +14,75 @@ type User struct {
 
 type Repository interface {
 	CreateUser(user User) (bool, error)
-	LoginUser(user User) (*User, error)
+	FindUserByName(name string) (bool, error)
+	GetUserByName(name string) (bool, error)
+	LoginUser(user User) (User, error)
 	GetUserImages(userName string) ([]string, error)
 	SaveNewImage(imagePath string) (bool, error)
 }
 
 type Database struct {
-	db *sql.DB
+	Db *sql.DB
 }
 
 func (db Database) CreateUser(user User) (bool, error) {
-	_, err := db.db.Query("INSERT INTO users (id, name) VALUES (4, 'Rafael')")
+	_, err := db.Db.Query("INSERT INTO users (name, password) VALUES ($1, $2)", user.Name, user.Password)
 
 	if err != nil {
-		fmt.Print("fail to select")
-		fmt.Print(err.Error())
+		fmt.Print("Failed to create user. Error => ", err.Error())
 		return false, err
 	}
 
 	return true, nil
 }
 
+func (db Database) UserExistsByName(name string) (bool, error) {
+	rows, err := db.Db.Query("SELECT id FROM users WHERE name = $1", name)
+
+	if err != nil {
+		fmt.Println("DB: Failed to search for user by name. Error => ", err.Error())
+		return false, err
+	}
+
+	defer rows.Close()
+	if rows.Next() {
+		fmt.Println("DB: Can not create user with existent name")
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (db Database) GetUserByName(name string) (User, error) {
+	rows, err := db.Db.Query("SELECT password FROM users WHERE name = $1", name)
+
+	var user User
+	var password string
+
+	if err != nil {
+		fmt.Println("DB: Failed to search for user by name. Error => ", err.Error())
+		return user, err
+	}
+
+	defer rows.Close()
+	if !rows.Next() {
+		fmt.Println("DB: User does not exist")
+		return user, nil
+	}
+
+	rows.Scan(&password)
+
+	user.Name = name
+	user.Password = password
+
+	return user, nil
+}
+
 func (dbInstance Database) GetUserImages(userName string) ([]string, error) {
 	var row string
 	var userFilesPaths []string
 
-	rows, err := dbInstance.db.Query("SELECT * FROM users")
+	rows, err := dbInstance.Db.Query("SELECT * FROM users")
 
 	if err != nil {
 		fmt.Print("fail to select")
@@ -62,24 +105,10 @@ func GetInstance() Database {
 	db, _ := sql.Open("postgres", connStr)
 
 	instance := Database{
-		db: db,
+		Db: db,
 	}
 
 	return instance
-	// if err != nil {
-	// 	// log.Fatal(err)
-	// 	fmt.Print("fail connecting")
-	// 	fmt.Print(string(err.Error()))
-	// }
-
-	// getHandler := http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
-	// 	get(w, request, db)
-	// })
-
-	// http.Handle("/", getHandler)
-
-	// fmt.Println("Listening")
-	// http.ListenAndServe(":8080", nil)
 }
 
 // func get(w http.ResponseWriter, request *http.Request, db *sql.DB) {
