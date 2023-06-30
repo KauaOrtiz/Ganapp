@@ -3,9 +3,9 @@ import { createCanvas, loadImage } from 'canvas';
 import * as fs from 'fs';
 
 
-const inputPath = '/home/amanda/Downloads/mug.jpeg';
-const outputPath = 'out.jpg'
-
+const inputPath = './inputImages/spider.jpg';
+const outputPath = 'out.jpg';
+const idx_to_name = JSON.parse(fs.readFileSync('sample.json', 'utf8'));
 
 async function getClassificator() {
     const modelUrl =
@@ -22,7 +22,7 @@ async function runClassification(img_tensor) {
 }
 
 async function getDense() {
-  const modelUrl ='file://content/modelEmb512js/model.json';
+  const modelUrl ='file://Dense512/model.json';
   const model = await tf.loadGraphModel(modelUrl);
   return model;
 }
@@ -34,7 +34,7 @@ async function runDense(oneHot) {
 }
 
 async function getGAN() {
-    const modelUrl ='file://content/web_model512/model.json';
+    const modelUrl ='file://gan512/model.json';
     const model = await tf.loadGraphModel(modelUrl);
     return model;
 }
@@ -57,14 +57,16 @@ async function main() {
 
     const class_softmax = await runClassification(img_tensor);
     const pred_idx = await class_softmax.argMax(-1).dataSync()[0];
-    console.log(pred_idx);
+
+    let class_name = idx_to_name[(pred_idx-1).toString()]
+    console.log(class_name)
+
     const pred_oneHot = tf.oneHot(pred_idx-1, 1000).expandDims().expandDims().mul(1.0);
 
     let embeddings = await runDense(pred_oneHot);
     embeddings = embeddings.reshape([1, 128]);
 
     let gan_output = await runGAN(z, embeddings, truncation);
-    console.log(gan_output);
     gan_output = await gan_output.reshape([512, 512, 3]).add(1).mul(127.5);
 
     const output_img = await tf.node.encodeJpeg(tf.cast(gan_output, 'int32'));
