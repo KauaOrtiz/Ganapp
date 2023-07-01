@@ -2,7 +2,7 @@
 * First, we need [go](https://go.dev/doc/install) isntalled.
 * We need a postgres database running on localhost. We can have a docker container running our db or [install postgres itself](https://www.postgresql.org/download/).
 * In case you chose docker, install its CLI and use the following command `docker run --name ganapp -e POSTGRES_PASSWORD=ganapppass -d -p 5432:5432 postgres`. Then simply start the container! Igore the next step!
-* Then, create a database called `ganapp` and give the postgres user the password `ganapppass`. We need those values for go-api to connect.
+* If not using Docker, create a database called `ganapp` and give the postgres user the password `ganapppass`. We need those values for go-api to connect.
 * We now need to execute our schema. Install [golang-migrate](https://github.com/golang-migrate/migrate/blob/master/cmd/migrate/README.md) for next step.
 * We need to enter `api` folder and run `migrate -path database/migrations -database "postgresql://postgres:ganapppass@localhost:5432/ganapp?sslmode=disable" -verbose up`
 * Last, we need to install dependencies. On `api` folder, run `go mod tidy`
