@@ -10,7 +10,7 @@
 
 ## Running project
 * With out database connected and migrated, we can enter `api` folder and `run go run main.go`
-* There is this route `/createImage` that need our node api running. Make sure to have it on in case this route will be called.
+* There is this route `/createImage` that needs our node api running. Make sure to have it on in case this route will be called.
 
 ## Routes
 * **http://localhost:8080/createUser**
