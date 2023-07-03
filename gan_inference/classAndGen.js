@@ -3,8 +3,9 @@ import { createCanvas, loadImage } from 'canvas';
 import * as fs from 'fs';
 
 
-const inputPath = './inputImages/spider.jpg';
-const outputPath = 'out.jpg';
+const staticInputPath = './inputImages/spider.jpg';
+const staticOutputPath = 'out.jpg';
+const staticFileName = 'spider.jpg';
 const idx_to_name = JSON.parse(fs.readFileSync('sample.json', 'utf8'));
 
 async function getClassificator() {
@@ -45,7 +46,11 @@ async function runGAN(z, y, truncation) {
     return pred;
 }
 
-async function main() {
+export async function main(
+  inputPath=staticInputPath, 
+  outputPath=staticOutputPath,
+  fileName=staticFileName
+) {
   try {
 
     const inputImg = fs.readFileSync(inputPath);
@@ -58,8 +63,9 @@ async function main() {
     const class_softmax = await runClassification(img_tensor);
     const pred_idx = await class_softmax.argMax(-1).dataSync()[0];
 
-    let class_name = idx_to_name[(pred_idx-1).toString()]
-    console.log(class_name)
+    let class_name = idx_to_name[(pred_idx-1).toString()];
+
+    console.log(`Found class ${class_name} for image ${fileName}"`)
 
     const pred_oneHot = tf.oneHot(pred_idx-1, 1000).expandDims().expandDims().mul(1.0);
 
@@ -70,10 +76,14 @@ async function main() {
     gan_output = await gan_output.reshape([512, 512, 3]).add(1).mul(127.5);
 
     const output_img = await tf.node.encodeJpeg(tf.cast(gan_output, 'int32'));
-    fs.writeFileSync("out.jpg", output_img);
+    fs.writeFileSync(outputPath, output_img);
+
+    return class_name, 0;
 
   } catch (error) {
-    console.error('Error running TensorFlow:', error);
+    console.error('Error running TensorFlow: ', error);
+    return "Error running TensorFlow", 1;
   }
 }
+
 main();
