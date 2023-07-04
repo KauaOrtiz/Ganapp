@@ -6,12 +6,15 @@ import (
 	"strings"
 
 	"github.com/KauaOrtiz/Ganapp/tree/master/api/database"
+	"github.com/KauaOrtiz/Ganapp/tree/master/api/models"
 
 	_ "github.com/lib/pq"
 )
 
+type User = models.User
+
 func CreateUser(name string, password string, repository *database.Database) (string, error) {
-	user := database.User{
+	user := User{
 		Name:     name,
 		Password: password,
 	}
@@ -38,16 +41,13 @@ func CreateUser(name string, password string, repository *database.Database) (st
 	return "User created sucessfully", nil
 }
 
-func LoginUser(name string, passwordd string, repository *database.Database) (string, database.User, error) {
+func LoginUser(name string, passwordd string, repository *database.Database) (string, User, error) {
 	user, err := repository.GetUserByName(name)
 
 	if err != nil {
 		fmt.Println("SERVICE: Failed to login user.")
 		return "Failed to login user", user, err
 	}
-
-	fmt.Println(user.Password)
-	fmt.Println(passwordd)
 
 	if user.Password != passwordd {
 		fmt.Println("SERVICE: Failed to login user. Credentials do not match.")
@@ -56,5 +56,4 @@ func LoginUser(name string, passwordd string, repository *database.Database) (st
 	}
 
 	return "Login was successful", user, nil
-
 }

@@ -2,22 +2,21 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
+	"github.com/KauaOrtiz/Ganapp/tree/master/api/models"
 	_ "github.com/lib/pq"
 )
 
-type User struct {
-	Name     string
-	Password string
-}
+type User = models.User
 
 type Repository interface {
 	CreateUser(user User) (bool, error)
-	FindUserByName(name string) (bool, error)
-	GetUserByName(name string) (bool, error)
 	LoginUser(user User) (User, error)
-	GetUserImages(userName string) ([]string, error)
+	FindUserByName(name string) (User, error)
+	UserExistsByName(name string) (bool, error)
+	GetUserImages(userName string) ([]string, string, error)
 	SaveNewImage(imagePath string) (bool, error)
 }
 
@@ -54,9 +53,10 @@ func (db Database) UserExistsByName(name string) (bool, error) {
 }
 
 func (db Database) GetUserByName(name string) (User, error) {
-	rows, err := db.Db.Query("SELECT password FROM users WHERE name = $1", name)
+	rows, err := db.Db.Query("SELECT id, password FROM users WHERE name = $1", name)
 
 	var user User
+	var id string
 	var password string
 
 	if err != nil {
@@ -67,76 +67,78 @@ func (db Database) GetUserByName(name string) (User, error) {
 	defer rows.Close()
 	if !rows.Next() {
 		fmt.Println("DB: User does not exist")
-		return user, nil
+		return user, errors.New("User does not exist")
 	}
 
-	rows.Scan(&password)
+	rows.Scan(&id, &password)
 
+	user.Id = id
 	user.Name = name
 	user.Password = password
 
 	return user, nil
 }
 
-func (dbInstance Database) GetUserImages(userName string) ([]string, error) {
+func (db Database) GetUserImages(userName string) ([]string, string, error) {
 	var row string
-	var userFilesPaths []string
+	var userFilesPath []string
 
-	rows, err := dbInstance.Db.Query("SELECT * FROM users")
+	user, err := db.GetUserByName(userName)
 
 	if err != nil {
-		fmt.Print("fail to select")
-		return nil, err
+		fmt.Println("DB: Failed save user image. Error => ", err.Error())
+		return nil, "Could not save image on database", err
+	}
+
+	rows, err := db.Db.Query("SELECT path FROM images WHERE user_id = $1", user.Id)
+
+	if err != nil {
+		fmt.Println("DB: Failed to search for user by name. Error => ", err.Error())
+		return nil, "Failed to get user images", err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		rows.Scan(nil, &row)
-		userFilesPaths = append(userFilesPaths, row)
+		rows.Scan(&row)
+		userFilesPath = append(userFilesPath, row)
 		fmt.Println(row)
 	}
 
-	return userFilesPaths, nil
+	return userFilesPath, "", nil
 }
 
-func GetInstance() Database {
+func (db Database) SaveNewImage(userName string, imgPath string) (string, error) {
+	user, err := db.GetUserByName(userName)
+
+	if err != nil {
+		fmt.Println("DB: Failed save user image. Error => ", err.Error())
+		return "Could not save image on database", err
+	}
+
+	rows, err := db.Db.Query("INSERT INTO images (path, user_id) VALUES ($1, $2)", imgPath, user.Id)
+
+	if err != nil {
+		fmt.Println("DB: Failed save user image. Error => ", err.Error())
+		return "Could not save image on database", err
+	}
+	defer rows.Close()
+
+	return "Image was saved successfully", nil
+}
+
+func GetInstance() (Database, error) {
 	connStr := "postgresql://postgres:ganapppass@127.0.0.1:5432/ganapp?sslmode=disable"
+
 	// Connect to database
-	db, _ := sql.Open("postgres", connStr)
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		fmt.Println("DB: Failed to connect to database. Error => ", err.Error())
+		return Database{}, err
+	}
 
 	instance := Database{
 		Db: db,
 	}
 
-	return instance
+	return instance, nil
 }
-
-// func get(w http.ResponseWriter, request *http.Request, db *sql.DB) {
-// 	var thisRow string
-// 	var thisRow1 string
-// 	var allRows []string
-
-// 	rows, err := db.Query("SELECT * FROM users")
-// 	if err != nil {
-// 		fmt.Print(string(err.Error()))
-// 		fmt.Print("fail to select")
-// 		return
-// 	}
-// 	defer rows.Close()
-// 	for rows.Next() {
-// 		rows.Scan(&thisRow, &thisRow1)
-// 		allRows = append(allRows, thisRow1)
-// 		fmt.Println(thisRow)
-// 		fmt.Println(thisRow1)
-// 	}
-
-// 	resp := make(map[int]string)
-// 	for i := 0; i < len(allRows); i++ {
-// 		resp[i] = allRows[i]
-// 	}
-
-// 	json, _ := json.Marshal(resp)
-// 	w.Header().Set("Content-Type", "application/json")
-// 	// w.Header().Set("Content-Type", "application/octet-stream")
-// 	w.Write(json)
-// }
