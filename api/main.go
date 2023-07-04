@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 
@@ -12,25 +11,29 @@ import (
 )
 
 var db database.Database
+var connectionErr error
 
 func main() {
-	db = database.GetInstance()
+	db, connectionErr = database.GetInstance()
 
-	fmt.Println("Listening")
-	// createImageHandler := http.HandlerFunc(createImage)
-	// getHandler := http.HandlerFunc(get)
+	if connectionErr != nil {
+		fmt.Println("Stoping server due to connection error => ", connectionErr.Error())
+		return
+	}
+
+	createImageHandler := http.HandlerFunc(createImage)
 	getImageHandler := http.HandlerFunc(getImage)
+	getUserImagesHandler := http.HandlerFunc(getUserImages)
+	createUserHandler := http.HandlerFunc(createUser)
+	loginUserHandler := http.HandlerFunc(loginUser)
 
-	// createUserHandler := http.HandlerFunc(createUser)
-	// loginUserHandler := http.HandlerFunc(loginUser)
-
-	// http.Handle("/image", createImageHandler)
-	// http.Handle("/json", getHandler)
+	http.Handle("/createImage", createImageHandler)
+	http.Handle("/getUserImages", getUserImagesHandler)
 	http.Handle("/getImage", getImageHandler)
+	http.Handle("/createUser", createUserHandler)
+	http.Handle("/loginUser", loginUserHandler)
 
-	// http.Handle("/createUser", createUserHandler)
-	// http.Handle("/loginUser", loginUserHandler)
-
+	fmt.Println("Go server listening on port 8080 🚀")
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -86,52 +89,70 @@ func createImage(w http.ResponseWriter, request *http.Request) {
 		return
 	}
 	//Access the photo key - First Approach
-	file, h, err := request.FormFile("photo")
+	file, header, err := request.FormFile("photo")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	tmpfile, err := os.Create("./" + h.Filename)
-	// defer tmpfile.Close()
+
+	userName := request.FormValue("userName")
+	imgName := header.Filename
+
+	newImg, message, err := services.CreateImage(file, imgName, userName, &db)
+
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	_, err = io.Copy(tmpfile, file)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, message, http.StatusBadRequest)
 		return
 	}
 
-	tmpImg, _ := os.ReadFile("./photo.jpg")
-	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Write(tmpImg)
-	fmt.Print("Hereee")
-	//w.WriteHeader(200)
+	response := make(map[string][]byte)
+	response["image"] = newImg
+	response["classification"] = []byte(message)
+
+	json, _ := json.Marshal(response)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(json)
 }
 
-func get(w http.ResponseWriter, request *http.Request) {
-	resp := make(map[string][]byte)
+func getUserImages(w http.ResponseWriter, request *http.Request) {
+	fields := request.URL.Query()["name"]
 
-	tmpImg1, _ := os.ReadFile("./<imagem 1>.jpg")
-	resp["img1"] = tmpImg1
+	if len(fields) == 0 {
+		http.Error(w, "Could not find user name on URI", http.StatusBadRequest)
+		return
+	}
 
-	tmpImg2, _ := os.ReadFile("./<imagem 2>.jpg")
-	resp["img2"] = tmpImg2
+	userName := fields[0]
+	images, message, err := services.GetUserImages(userName, &db)
 
-	json, _ := json.Marshal(resp)
+	if err != nil {
+		http.Error(w, message, http.StatusBadRequest)
+		return
+	}
+
+	response := make(map[string][]byte)
+	for i := 0; i < len(images); i++ {
+		key := "image_" + fmt.Sprint(i)
+		response[key] = images[i]
+	}
+
+	json, _ := json.Marshal(response)
 	w.Header().Set("Content-Type", "application/json")
-	// w.Header().Set("Content-Type", "application/octet-stream")
 	w.Write(json)
 }
 
 func getImage(w http.ResponseWriter, r *http.Request) {
-	ImageString, err := os.ReadFile("./testImage.txt")
+	tmpImg, err := os.ReadFile("../files/tests/house.jpg")
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	w.Write([]byte(ImageString))
+	response := make(map[string][]byte)
+	response["image"] = tmpImg
+
+	json, _ := json.Marshal(response)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(json)
 }
