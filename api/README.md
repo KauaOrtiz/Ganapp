@@ -9,7 +9,7 @@
 * Now we are all set to run our project  🚀
 
 ## Running project
-* With out database connected and migrated, we can enter `api` folder and `run go run main.go`
+* With out database connected and migrated, we can enter `api` folder and run `go run main.go`
 * Make sure to create a `input` and `output` folder inside the `files` folder, which is on the project root
 * There is this route `/createImage` that needs our node api running. Make sure to have it on in case this route will be called.
 
