@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
-import { main as processImage } from './classAndGen';
+import { main as processImage } from './classAndGen.js';
 
 const app = express();
 app.use(express.json());
