@@ -46,7 +46,7 @@
 
 * **http://localhost:8080/getUserImages?name=Joao** 
 
-  We expect a query params like on route above <br>
+  We expect a query param like on shown above <br>
   Returns a json like a json like `{
 	"image_0": "IMAGEM EM Base64",
 	"image_1": "IMAGEM EM Base64",
@@ -55,7 +55,7 @@
 
 * **http://localhost:8080/getImage** (Not used on app)
 
-  We expect a query param like on route above <br>
+  We expect nothing on body nor query <br>
   Returns a json like a json like `{
 	"image": "IMAGEM TESTS EM Base64"
 }`
