@@ -1,6 +1,5 @@
 package com.example.ganapp;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -20,10 +19,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.json.JSONObject;
+
 import java.util.List;
 import java.util.ArrayList;
+import org.json.JSONException;
 
-public class HistoryActivity extends AppCompatActivity implements HttpRequestGetHistory.OnResponseReceivedListener {
+public class HistoryActivity extends AppCompatActivity implements HttpRequest.OnResponseReceivedListener {
     private static final String TAG = "MainActivity";
     List<ListItem> items;
     ListView listView;
@@ -62,7 +64,7 @@ public class HistoryActivity extends AppCompatActivity implements HttpRequestGet
         listView.setClickable(true);
 
         // Create an instance of HttpRequestGetHistory and pass 'this' as the listener
-        HttpRequestGetHistory httpRequest = new HttpRequestGetHistory(this);
+        HttpRequest httpRequest = new HttpRequest(this);
 
         // Execute the HTTP GET request
         httpRequest.execute();
@@ -70,8 +72,9 @@ public class HistoryActivity extends AppCompatActivity implements HttpRequestGet
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long l) {
-                Intent intent = new Intent(HistoryActivity.this, MenuActivity.class);
-                startActivity(intent);
+                    ImageView imageView = view.findViewById(R.id.imageView);
+//                Intent intent = new Intent(HistoryActivity.this, MenuActivity.class);
+//                startActivity(intent);
             }
         });
     }
@@ -81,17 +84,29 @@ public class HistoryActivity extends AppCompatActivity implements HttpRequestGet
         // Handle the received response here
         if (response != null) {
             Log.d(TAG, "Received response: " + response);
-            final String pureBase64Encoded = response.substring(response.indexOf(",")  + 1);
-            byte[] bytes = Base64.decode(pureBase64Encoded, Base64.DEFAULT);
+            // Extract the base64-encoded image string from the JSON response
+            try {
+                // Create a JSONObject from the response string
+                JSONObject json = new JSONObject(response);
 
-            // Initialize bitmap
-            Bitmap decodedByte = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                // Access the value of the 'image' key
+                String imageBase64 = json.getString("image");
 
-            // Add the item to the list
-            items.add(new ListItem(decodedByte, "Example Text"));
+                byte[] bytes = Base64.decode(imageBase64, Base64.DEFAULT);
 
-            // Notify the adapter that the data has changed
-            adapter.notifyDataSetChanged();
+                // Initialize bitmap
+                Bitmap decodedByte = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+
+                // Add the item to the list
+                items.add(new ListItem(decodedByte, "Example Text"));
+                // Notify the adapter that the data has changed
+                adapter.notifyDataSetChanged();
+
+            } catch (JSONException e) {
+                // Handle JSON exception
+                e.printStackTrace();
+                // or throw a custom exception or handle the error in a different way
+            }
         } else {
             Log.e(TAG, "Received null response");
             // Handle the case when the response is null

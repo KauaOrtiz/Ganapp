@@ -3,9 +3,9 @@ import { createCanvas, loadImage } from 'canvas';
 import * as fs from 'fs';
 
 
-const staticInputPath = './inputImages/spider.jpg';
-const staticOutputPath = 'out.jpg';
-const staticFileName = 'spider.jpg';
+const staticInputPath = './inputImages/spider.png';
+const staticOutputPath = 'out.png';
+const staticFileName = 'spider.png';
 const idx_to_name = JSON.parse(fs.readFileSync('sample.json', 'utf8'));
 
 async function getClassificator() {
@@ -77,13 +77,12 @@ export async function main(
 
     const output_img = await tf.node.encodeJpeg(tf.cast(gan_output, 'int32'));
     fs.writeFileSync(outputPath, output_img);
-
-    return class_name, 0;
+    return [class_name, 0];
 
   } catch (error) {
     console.error('Error running TensorFlow: ', error);
-    return "Error running TensorFlow", 1;
+    return ("Error running TensorFlow", 1);
   }
 }
 
-main();
+// main();

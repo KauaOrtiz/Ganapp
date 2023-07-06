@@ -83,11 +83,14 @@ func loginUser(w http.ResponseWriter, request *http.Request) {
 }
 
 func createImage(w http.ResponseWriter, request *http.Request) {
+    fmt.Println("1")
 	err := request.ParseMultipartForm(32 << 20) // maxMemory 32MB
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+    fmt.Println("2")
+
 	//Access the photo key - First Approach
 	file, header, err := request.FormFile("photo")
 	if err != nil {

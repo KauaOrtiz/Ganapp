@@ -127,7 +127,7 @@ func (db Database) SaveNewImage(userName string, imgPath string) (string, error)
 }
 
 func GetInstance() (Database, error) {
-	connStr := "postgresql://postgres:ganapppass@127.0.0.1:5432/ganapp?sslmode=disable"
+	connStr := "postgresql://postgres:senha@127.0.0.1:5432/ganapp?sslmode=disable"
 
 	// Connect to database
 	db, err := sql.Open("postgres", connStr)

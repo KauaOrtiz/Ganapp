@@ -51,8 +51,8 @@ func CreateImage(file multipart.File, fileName string, userName string, reposito
 		return nil, "Could not decode node api response", err
 	}
 
-	// outputPath := "../files/output/" + modifiedName
-	outputPath := "../files/output/" + "test.jpg"
+	outputPath := "../files/output/" + modifiedName
+// 	outputPath := "../files/output/" + "test.jpg"
 	processedFile, err := os.ReadFile(outputPath)
 	if err != nil {
 		fmt.Println("SERVICE: Failed to return processed image. Error => ", err.Error())
