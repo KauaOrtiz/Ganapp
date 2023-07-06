@@ -19,10 +19,14 @@ public class FileUploader {
                 .build();
 
         // Create the request
+        System.out.println("\n\n\n--------------\n\n\n------------\nChegou aqui \n\n\n--------------\n\n\n------------");
+
         Request request = new Request.Builder()
                 .url("http://192.168.2.101:8080/createImage")
                 .post(requestBody)
                 .build();
+        System.out.println("\n\n\n--------------\n\n\n------------\nVishhhh aqui \n\n\n--------------\n\n\n------------" + new File(filePath).getName());
+
 
         // Execute the request
         client.newCall(request).enqueue(new Callback() {
@@ -35,6 +39,7 @@ public class FileUploader {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
+                System.out.println("\n\n\n--------------\n\n\n------------\nMandou para a API \n\n\n--------------\n\n\n------------");
                 System.out.println(response);
                 // Handle success
             }

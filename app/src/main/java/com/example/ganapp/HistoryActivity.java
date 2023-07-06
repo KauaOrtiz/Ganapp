@@ -24,7 +24,8 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.ArrayList;
 import org.json.JSONException;
-
+import org.json.JSONObject;
+import java.util.Iterator;
 public class HistoryActivity extends AppCompatActivity implements HttpRequest.OnResponseReceivedListener {
     private static final String TAG = "MainActivity";
     List<ListItem> items;
@@ -90,15 +91,24 @@ public class HistoryActivity extends AppCompatActivity implements HttpRequest.On
                 JSONObject json = new JSONObject(response);
 
                 // Access the value of the 'image' key
-                String imageBase64 = json.getString("image");
+                // Get the keys from the JSON object
+                Iterator<String> keys = json.keys();
 
-                byte[] bytes = Base64.decode(imageBase64, Base64.DEFAULT);
+                // Iterate over the keys and access the images
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    String imageBase64 = json.getString(key);
 
-                // Initialize bitmap
-                Bitmap decodedByte = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                    byte[] bytes = Base64.decode(imageBase64, Base64.DEFAULT);
 
-                // Add the item to the list
-                items.add(new ListItem(decodedByte, "Example Text"));
+                    // Initialize bitmap
+                    Bitmap decodedByte = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+
+                    // Add the item to the list
+                    items.add(new ListItem(decodedByte, key));
+                }
+
+
                 // Notify the adapter that the data has changed
                 adapter.notifyDataSetChanged();
 

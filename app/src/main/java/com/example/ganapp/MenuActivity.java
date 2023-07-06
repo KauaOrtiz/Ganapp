@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -29,7 +31,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 // Import the necessary classes
 
@@ -142,39 +148,67 @@ public class MenuActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Uri selectedImageUri = null;
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            flag = false;
-            selectedImageUri = data.getData();
-//            String base64Image = convertImageToBase64(selectedImageUri);
-
-            if (selectedImageUri == null) {
-                return;
-            }
-            System.out.println(selectedImageUri);
-
-            String filePath = selectedImageUri.getPath();
-//            String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/WhatsApp/Media/WhatsApp Images/IMG-20230704-WA0003.jpg";
-
-            System.out.println(filePath);
-
-            FileUploader.uploadFile(filePath);
-            //Make something with the picture
-
-        }
-        if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK && data != null) {
+        if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            System.out.println("TO DOIDOOOOOOOOOO");
             flag = false;
             selectedImageUri = data.getData();
             //Make something with the picture
-            System.out.println(selectedImageUri);
-            String filePath = selectedImageUri.getPath();
-//            String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/WhatsApp/Media/WhatsApp Images/IMG-20230704-WA0003.jpg";
-
-            System.out.println(filePath);
-
-            FileUploader.uploadFile(filePath);
+            System.out.println("oxiiiiiiiiiiiiiiiiiiiii");
+            System.out.println(getRealPathFromGallery(selectedImageUri));
+            System.out.println("oxiiiiiiiiiiiiiiiiiiiii");
+            FileUploader.uploadFile(getRealPathFromGallery(selectedImageUri));
         }
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK && data != null && data.getData() == null) {
+            System.out.println("PUTSSSS GRILAAAAAAAAAAAA");
+            System.out.println(requestCode);
+            flag = false;
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            String filePath = getImagePathFromCamera(imageBitmap);
+            //Make something with the picture
+            FileUploader.uploadFile(filePath);
+
+        }
+
 
     }
+    private String getRealPathFromGallery(Uri contentURI) {
+        String result;
+        Cursor cursor = getContentResolver().query(contentURI, null, null, null, null);
+        if (cursor == null) {
+            result = contentURI.getPath();
+        } else {
+            cursor.moveToFirst();
+            int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            result = cursor.getString(idx);
+            cursor.close();
+        }
+        return result;
+    }
+
+    public String getImagePathFromCamera(Bitmap bitmap) {
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/saved_images");
+        if (!myDir.exists()) {
+            myDir.mkdirs();
+        }
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        String fileName = "IMG_" + timeStamp + ".jpg";
+        File file = new File(myDir, fileName);
+
+        try {
+            FileOutputStream outputStream = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+            outputStream.flush();
+            outputStream.close();
+            return file.getAbsolutePath();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
     //default app functions
     @Override
     protected void onDestroy() {

@@ -31,7 +31,7 @@ public class HttpRequest extends AsyncTask<Void, Void, String> {
     @Override
     protected String doInBackground(Void... voids) {
         try {
-            URL url = new URL(SERVER_URL + "getImage");
+            URL url = new URL(SERVER_URL + "getUserImages?name=Rafael");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
 

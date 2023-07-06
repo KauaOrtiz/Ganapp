@@ -16,7 +16,7 @@ func GetUserImages(userName string, repository *database.Database) ([][]byte, st
 
 	var images [][]byte
 	for i := 0; i < len(imagesPath); i++ {
-		tmpImage, err := os.ReadFile("../files/input/" + imagesPath[i])
+		tmpImage, err := os.ReadFile("../files/output/" + imagesPath[i])
 
 		if err != nil {
 			fmt.Println("SERVICE: Failed to load image => ", imagesPath[i])
