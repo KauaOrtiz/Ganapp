@@ -17,6 +17,7 @@
         android:roundIcon="@mipmap/ic_official_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Ganapp"
+        android:requestLegacyExternalStorage="true"
         tools:targetApi="31">
         <activity
             android:name=".Broker"

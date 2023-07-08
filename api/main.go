@@ -88,6 +88,7 @@ func createImage(w http.ResponseWriter, request *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	//Access the photo key - First Approach
 	file, header, err := request.FormFile("photo")
 	if err != nil {

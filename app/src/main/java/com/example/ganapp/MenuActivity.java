@@ -5,17 +5,39 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.util.Base64;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.VideoView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+// Import the necessary classes
 
 public class MenuActivity extends AppCompatActivity {
 
@@ -125,17 +147,68 @@ public class MenuActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+        Uri selectedImageUri = null;
+        if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            System.out.println("TO DOIDOOOOOOOOOO");
             flag = false;
-            Uri selectedImageUri = data.getData();
+            selectedImageUri = data.getData();
             //Make something with the picture
+            System.out.println("oxiiiiiiiiiiiiiiiiiiiii");
+            System.out.println(getRealPathFromGallery(selectedImageUri));
+            System.out.println("oxiiiiiiiiiiiiiiiiiiiii");
+            FileUploader.uploadFile(getRealPathFromGallery(selectedImageUri));
         }
-        if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK && data != null) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK && data != null && data.getData() == null) {
+            System.out.println("PUTSSSS GRILAAAAAAAAAAAA");
+            System.out.println(requestCode);
             flag = false;
-            Uri selectedImageUri = data.getData();
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            String filePath = getImagePathFromCamera(imageBitmap);
             //Make something with the picture
+            FileUploader.uploadFile(filePath);
+
+        }
+
+
+    }
+    private String getRealPathFromGallery(Uri contentURI) {
+        String result;
+        Cursor cursor = getContentResolver().query(contentURI, null, null, null, null);
+        if (cursor == null) {
+            result = contentURI.getPath();
+        } else {
+            cursor.moveToFirst();
+            int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            result = cursor.getString(idx);
+            cursor.close();
+        }
+        return result;
+    }
+
+    public String getImagePathFromCamera(Bitmap bitmap) {
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/saved_images");
+        if (!myDir.exists()) {
+            myDir.mkdirs();
+        }
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        String fileName = "IMG_" + timeStamp + ".jpg";
+        File file = new File(myDir, fileName);
+
+        try {
+            FileOutputStream outputStream = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+            outputStream.flush();
+            outputStream.close();
+            return file.getAbsolutePath();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
+
+
     //default app functions
     @Override
     protected void onDestroy() {
@@ -161,5 +234,51 @@ public class MenuActivity extends AppCompatActivity {
         super.onResume();
         //Play soundtrack
         mediaPlayer.start();
+    }
+    private void sendImageToApi(Uri imageUri) throws JSONException {
+        String imagePath = imageUri.getPath();
+        File imageFile = new File(imagePath);
+
+        JSONObject jsonBody = new JSONObject();
+        jsonBody.put("userName", "Rafael");
+        String jsonPayload = jsonBody.toString();
+
+        Map<String, String> fields = new HashMap<>();
+// Add any additional fields to the map if required
+        fields.put("jsonPayload", jsonPayload); // Add the JSON payload to the map
+
+        Map<String, String> files = new HashMap<>();
+        files.put("image", imageFile.getAbsolutePath()); // Add the image file to the map
+    }
+    private String convertImageToBase64(Uri imageUri) {
+        try {
+            // Open an input stream from the image URI
+            InputStream inputStream = getContentResolver().openInputStream(imageUri);
+
+            // Read the input stream into a byte array
+            byte[] imageBytes = getBytes(inputStream);
+
+            // Convert the byte array to a base64 string
+            String base64Image = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+
+            // Close the input stream
+            inputStream.close();
+
+            return base64Image;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private byte[] getBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+        int bufferSize = 1024;
+        byte[] buffer = new byte[bufferSize];
+        int len;
+        while ((len = inputStream.read(buffer)) != -1) {
+            byteBuffer.write(buffer, 0, len);
+        }
+        return byteBuffer.toByteArray();
     }
 }
