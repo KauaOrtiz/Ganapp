@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import org.json.JSONException;
@@ -155,26 +156,22 @@ public class MenuActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Uri selectedImageUri = null;
+        Toast toast = Toast.makeText(getApplicationContext(), "Imagem salva com sucesso",Toast.LENGTH_SHORT);
         if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            System.out.println("TO DOIDOOOOOOOOOO");
             flag = false;
             selectedImageUri = data.getData();
             //Make something with the picture
-            System.out.println("oxiiiiiiiiiiiiiiiiiiiii");
             System.out.println(getRealPathFromGallery(selectedImageUri));
-            System.out.println("oxiiiiiiiiiiiiiiiiiiiii");
-            FileUploader.uploadFile(getRealPathFromGallery(selectedImageUri));
+            FileUploader.uploadFile(getRealPathFromGallery(selectedImageUri), toast);
         }
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK && data != null && data.getData() == null) {
-            System.out.println("PUTSSSS GRILAAAAAAAAAAAA");
             System.out.println(requestCode);
             flag = false;
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             String filePath = getImagePathFromCamera(imageBitmap);
             //Make something with the picture
-            FileUploader.uploadFile(filePath);
-
+            FileUploader.uploadFile(filePath, toast);
         }
 
 

@@ -1,7 +1,11 @@
 package com.example.ganapp;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
@@ -21,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.ArrayList;
 import org.json.JSONException;
@@ -73,11 +78,47 @@ public class HistoryActivity extends AppCompatActivity implements HttpRequest.On
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long l) {
-                    ImageView imageView = view.findViewById(R.id.imageView);
-//                Intent intent = new Intent(HistoryActivity.this, MenuActivity.class);
-//                startActivity(intent);
+                Log.d(TAG, "position " + position);
+                Bitmap imageBitMap = null;
+                int count = 0;
+                for (ListItem item : items) {
+                    if (count == position){
+                        imageBitMap = item.getImage();
+                        break;
+                    }
+                    count += 1;
+                }
+                String base64 = bitmapToBase64(imageBitMap);
+                Intent intent = new Intent(HistoryActivity.this, ViewImageActivity.class);
+                // Pass the imageBase64 as an extra in the Intent
+                intent.putExtra("image", base64);
+                Log.d(TAG, "base64 " + base64);
+
+
+                // Start the ViewImageActivity
+                startActivity(intent);
             }
         });
+    }
+    private Bitmap drawableToBitmap(Drawable drawable) {
+        if (drawable instanceof BitmapDrawable) {
+            return ((BitmapDrawable) drawable).getBitmap();
+        }
+
+        int width = drawable.getIntrinsicWidth();
+        int height = drawable.getIntrinsicHeight();
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+
+        return bitmap;
+    }
+    private String bitmapToBase64(Bitmap bitmap) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        return Base64.encodeToString(byteArray, Base64.DEFAULT);
     }
 
     @Override
