@@ -27,14 +27,14 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".MenuActivity"
+            android:name=".HistoryActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".HistoryActivity"
+            android:name=".MenuActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

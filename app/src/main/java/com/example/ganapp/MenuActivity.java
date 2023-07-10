@@ -81,8 +81,8 @@ public class MenuActivity extends AppCompatActivity {
         //Calling the animate writing class
         WritingMachine write = new WritingMachine();
         write.writeMachine(ganappName,"Ganapp.", animateDelay);
-        write.writeMachine(ganappInfoPTBR,"Toque para câmera.\nPressione para galeria.", animateDelay);
-        write.writeMachine(ganappInfoEN,"Touch to camera.\nPress to gallery.", animateDelay);
+        write.writeMachine(ganappInfoPTBR,"Toque no ícone para câmera.\nOu pressione para abrir a galeria.\nToque em Ganapp para nosso histórico.", animateDelay);
+        write.writeMachine(ganappInfoEN,"Tap the icon to camera.\nOr press to open the gallery.\nTap the Ganapp to our historic.", animateDelay);
 
         //Starts background soundtrack
         mediaPlayer = MediaPlayer.create(this, R.raw.background_sound);
@@ -125,6 +125,13 @@ public class MenuActivity extends AppCompatActivity {
                     //finish();
                 }
             };
+        });
+        ganappName.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MenuActivity.this, HistoryActivity.class);
+                startActivity(intent);
+            }
         });
     }
 
