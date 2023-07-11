@@ -8,13 +8,14 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func GetUserImages(userName string, repository *database.Database) ([][]byte, string, error) {
-	imagesPath, message, err := repository.GetUserImages(userName)
+func GetUserImages(userName string, repository *database.Database) ([][]byte, []string, string, error) {
+	imagesPath, imagesClass, message, err := repository.GetUserImages(userName)
 	if err != nil {
-		return nil, message, err
+		return nil, nil, message, err
 	}
 
 	var images [][]byte
+	var classes []string
 	for i := 0; i < len(imagesPath); i++ {
 		tmpImage, err := os.ReadFile("../files/output/" + imagesPath[i])
 
@@ -24,7 +25,8 @@ func GetUserImages(userName string, repository *database.Database) ([][]byte, st
 		}
 
 		images = append(images, tmpImage)
+		classes = append(classes, imagesClass[i])
 	}
 
-	return images, "", nil
+	return images, classes, "", nil
 }

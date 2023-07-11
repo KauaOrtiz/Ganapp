@@ -40,17 +40,16 @@
 	"userName": "Rafael"
 }`<br>
   Returns a json like a json like `{
-	"classification": "A imagem gerada pertence ah classe x",
-	"image": "IMAGEM EM Base64"
+	"Classification": "A imagem gerada pertence ah classe x",
+	"Image": "IMAGEM EM Base64"
 }`
 
 * **http://localhost:8080/getUserImages?name=Joao** 
 
   We expect a query param like on shown above <br>
   Returns a json like a json like `{
-	"image_0": "IMAGEM EM Base64",
-	"image_1": "IMAGEM EM Base64",
-	"image_2": "IMAGEM EM Base64"
+	"image_0": { "Image": "IMAGEM EM Base64", Classification: "classificação da image" },
+	"image_1": { "Image": "IMAGEM EM Base64", Classification: "classificação da image" }
 }`
 
 * **http://localhost:8080/getImage** (Not used on app)
