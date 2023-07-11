@@ -49,8 +49,7 @@
   We expect a query param like on shown above <br>
   Returns a json like a json like `{
 	"image_0": { "Image": "IMAGEM EM Base64", Classification: "classificação da image" },
-	"image_1": { "Image": "IMAGEM EM Base64", Classification: "classificação da image" },
-	"image_2": { "Image": "IMAGEM EM Base64", Classification: "classificação da image" }
+	"image_1": { "Image": "IMAGEM EM Base64", Classification: "classificação da image" }
 }`
 
 * **http://localhost:8080/getImage** (Not used on app)
