@@ -13,6 +13,11 @@ import (
 var db database.Database
 var connectionErr error
 
+type Image struct {
+	Image          []byte
+	Classification string
+}
+
 func main() {
 	db, connectionErr = database.GetInstance()
 
@@ -64,8 +69,6 @@ func loginUser(w http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	fmt.Println(user.Password)
-
 	message, loggedUser, err := services.LoginUser(user.Name, user.Password, &db)
 
 	if err != nil {
@@ -106,9 +109,13 @@ func createImage(w http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	response := make(map[string][]byte)
-	response["image"] = newImg
-	response["classification"] = []byte(message)
+	img := &Image{
+		Image:          newImg,
+		Classification: message,
+	}
+
+	response := make(map[string]Image)
+	response["image"] = *img
 
 	json, _ := json.Marshal(response)
 	w.Header().Set("Content-Type", "application/json")
@@ -124,17 +131,24 @@ func getUserImages(w http.ResponseWriter, request *http.Request) {
 	}
 
 	userName := fields[0]
-	images, message, err := services.GetUserImages(userName, &db)
+	images, classes, message, err := services.GetUserImages(userName, &db)
 
 	if err != nil {
 		http.Error(w, message, http.StatusBadRequest)
 		return
 	}
 
-	response := make(map[string][]byte)
+	response := make(map[string]Image)
 	for i := 0; i < len(images); i++ {
+
 		key := "image_" + fmt.Sprint(i)
-		response[key] = images[i]
+
+		img := &Image{
+			Image:          images[i],
+			Classification: classes[i],
+		}
+
+		response[key] = *img
 	}
 
 	json, _ := json.Marshal(response)

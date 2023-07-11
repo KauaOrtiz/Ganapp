@@ -79,35 +79,35 @@ func (db Database) GetUserByName(name string) (User, error) {
 	return user, nil
 }
 
-func (db Database) GetUserImages(userName string) ([]string, string, error) {
-	var row string
-	var userFilesPath []string
+func (db Database) GetUserImages(userName string) ([]string, []string, string, error) {
+	var path, class string
+	var userFilesPath, userFilesClass []string
 
 	user, err := db.GetUserByName(userName)
 
 	if err != nil {
 		fmt.Println("DB: Failed save user image. Error => ", err.Error())
-		return nil, "Could not save image on database", err
+		return nil, nil, "Could not save image on database", err
 	}
 
-	rows, err := db.Db.Query("SELECT path FROM images WHERE user_id = $1", user.Id)
+	rows, err := db.Db.Query("SELECT path, classification FROM images WHERE user_id = $1", user.Id)
 
 	if err != nil {
 		fmt.Println("DB: Failed to search for user by name. Error => ", err.Error())
-		return nil, "Failed to get user images", err
+		return nil, nil, "Failed to get user images", err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		rows.Scan(&row)
-		userFilesPath = append(userFilesPath, row)
-		fmt.Println(row)
+		rows.Scan(&path, &class)
+		userFilesPath = append(userFilesPath, path)
+		userFilesClass = append(userFilesClass, class)
 	}
 
-	return userFilesPath, "", nil
+	return userFilesPath, userFilesClass, "", nil
 }
 
-func (db Database) SaveNewImage(userName string, imgPath string) (string, error) {
+func (db Database) SaveNewImage(userName string, imgPath string, class string) (string, error) {
 	user, err := db.GetUserByName(userName)
 
 	if err != nil {
@@ -115,7 +115,7 @@ func (db Database) SaveNewImage(userName string, imgPath string) (string, error)
 		return "Could not save image on database", err
 	}
 
-	rows, err := db.Db.Query("INSERT INTO images (path, user_id) VALUES ($1, $2)", imgPath, user.Id)
+	rows, err := db.Db.Query("INSERT INTO images (path, user_id, classification) VALUES ($1, $2, $3)", imgPath, user.Id, class)
 
 	if err != nil {
 		fmt.Println("DB: Failed save user image. Error => ", err.Error())
