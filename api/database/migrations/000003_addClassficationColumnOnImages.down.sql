@@ -1,0 +1,1 @@
+alter table images drop column classification;

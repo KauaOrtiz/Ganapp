@@ -1,0 +1,1 @@
+alter table images add column classification varchar(100);
