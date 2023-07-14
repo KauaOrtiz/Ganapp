@@ -13,18 +13,17 @@ type User = models.User
 
 type Repository interface {
 	CreateUser(user User) (bool, error)
-	LoginUser(user User) (User, error)
-	FindUserByName(name string) (User, error)
+	GetUserByName(name string) (User, error)
 	UserExistsByName(name string) (bool, error)
-	GetUserImages(userName string) ([]string, string, error)
-	SaveNewImage(imagePath string) (bool, error)
+	GetUserImages(userName string) ([]string, []string, string, error)
+	SaveNewImage(userName string, imgPath string, class string) (string, error)
 }
 
 type Database struct {
 	Db *sql.DB
 }
 
-func (db Database) CreateUser(user User) (bool, error) {
+func (db *Database) CreateUser(user User) (bool, error) {
 	_, err := db.Db.Query("INSERT INTO users (name, password) VALUES ($1, $2)", user.Name, user.Password)
 
 	if err != nil {
@@ -35,7 +34,7 @@ func (db Database) CreateUser(user User) (bool, error) {
 	return true, nil
 }
 
-func (db Database) UserExistsByName(name string) (bool, error) {
+func (db *Database) UserExistsByName(name string) (bool, error) {
 	rows, err := db.Db.Query("SELECT id FROM users WHERE name = $1", name)
 
 	if err != nil {
@@ -52,7 +51,7 @@ func (db Database) UserExistsByName(name string) (bool, error) {
 	return false, nil
 }
 
-func (db Database) GetUserByName(name string) (User, error) {
+func (db *Database) GetUserByName(name string) (User, error) {
 	rows, err := db.Db.Query("SELECT id, password FROM users WHERE name = $1", name)
 
 	var user User
@@ -79,7 +78,7 @@ func (db Database) GetUserByName(name string) (User, error) {
 	return user, nil
 }
 
-func (db Database) GetUserImages(userName string) ([]string, []string, string, error) {
+func (db *Database) GetUserImages(userName string) ([]string, []string, string, error) {
 	var path, class string
 	var userFilesPath, userFilesClass []string
 
@@ -107,7 +106,7 @@ func (db Database) GetUserImages(userName string) ([]string, []string, string, e
 	return userFilesPath, userFilesClass, "", nil
 }
 
-func (db Database) SaveNewImage(userName string, imgPath string, class string) (string, error) {
+func (db *Database) SaveNewImage(userName string, imgPath string, class string) (string, error) {
 	user, err := db.GetUserByName(userName)
 
 	if err != nil {
@@ -126,17 +125,17 @@ func (db Database) SaveNewImage(userName string, imgPath string, class string) (
 	return "Image was saved successfully", nil
 }
 
-func GetInstance() (Database, error) {
+func GetInstance() (Repository, error) {
 	connStr := "postgresql://postgres:senha@127.0.0.1:5432/ganapp?sslmode=disable"
 
 	// Connect to database
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		fmt.Println("DB: Failed to connect to database. Error => ", err.Error())
-		return Database{}, err
+		return &Database{}, err
 	}
 
-	instance := Database{
+	instance := &Database{
 		Db: db,
 	}
 

@@ -13,7 +13,7 @@ import (
 
 type User = models.User
 
-func CreateUser(name string, password string, repository *database.Database) (string, error) {
+func CreateUser(name string, password string, repository database.Repository) (string, error) {
 	user := User{
 		Name:     name,
 		Password: password,
@@ -41,7 +41,7 @@ func CreateUser(name string, password string, repository *database.Database) (st
 	return "User created sucessfully", nil
 }
 
-func LoginUser(name string, passwordd string, repository *database.Database) (string, User, error) {
+func LoginUser(name string, passwordd string, repository database.Repository) (string, User, error) {
 	user, err := repository.GetUserByName(name)
 
 	if err != nil {

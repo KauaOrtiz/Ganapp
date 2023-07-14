@@ -10,7 +10,7 @@ import (
 	"github.com/KauaOrtiz/Ganapp/tree/master/api/services"
 )
 
-var db database.Database
+var db database.Repository
 var connectionErr error
 
 type Image struct {
@@ -51,7 +51,7 @@ func createUser(w http.ResponseWriter, request *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 
-	message, err := services.CreateUser(user.Name, user.Password, &db)
+	message, err := services.CreateUser(user.Name, user.Password, db)
 
 	if err != nil {
 		http.Error(w, message, http.StatusBadRequest)
@@ -69,7 +69,7 @@ func loginUser(w http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	message, loggedUser, err := services.LoginUser(user.Name, user.Password, &db)
+	message, loggedUser, err := services.LoginUser(user.Name, user.Password, db)
 
 	if err != nil {
 		http.Error(w, message, http.StatusBadRequest)
@@ -102,7 +102,7 @@ func createImage(w http.ResponseWriter, request *http.Request) {
 	userName := request.FormValue("userName")
 	imgName := header.Filename
 
-	newImg, message, err := services.CreateImage(file, imgName, userName, &db)
+	newImg, message, err := services.CreateImage(file, imgName, userName, db)
 
 	if err != nil {
 		http.Error(w, message, http.StatusBadRequest)
@@ -131,7 +131,7 @@ func getUserImages(w http.ResponseWriter, request *http.Request) {
 	}
 
 	userName := fields[0]
-	images, classes, message, err := services.GetUserImages(userName, &db)
+	images, classes, message, err := services.GetUserImages(userName, db)
 
 	if err != nil {
 		http.Error(w, message, http.StatusBadRequest)
