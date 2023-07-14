@@ -8,7 +8,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func GetUserImages(userName string, repository *database.Database) ([][]byte, []string, string, error) {
+func GetUserImages(userName string, repository database.Repository) ([][]byte, []string, string, error) {
 	imagesPath, imagesClass, message, err := repository.GetUserImages(userName)
 	if err != nil {
 		return nil, nil, message, err

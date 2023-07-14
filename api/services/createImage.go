@@ -18,7 +18,7 @@ type Message struct {
 	Classification string `json:"classification"`
 }
 
-func CreateImage(file multipart.File, fileName string, userName string, repository *database.Database) ([]byte, string, error) {
+func CreateImage(file multipart.File, fileName string, userName string, repository database.Repository) ([]byte, string, error) {
 	modifiedName := uuid.NewString() + "_" + fileName
 	inputPath := "../files/input/" + modifiedName
 
