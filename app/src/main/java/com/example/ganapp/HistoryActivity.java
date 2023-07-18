@@ -1,5 +1,7 @@
 package com.example.ganapp;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -7,12 +9,14 @@ import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
@@ -35,14 +39,16 @@ public class HistoryActivity extends AppCompatActivity implements HttpRequest.On
     private static final String TAG = "MainActivity";
     List<ListItem> items;
     ListView listView;
+    ImageView ShowImage;
+    boolean isShowing = false;
     ArrayAdapter<ListItem> adapter;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_history);
-
         listView = findViewById(R.id.list_view);
+        ShowImage = findViewById(R.id.imageView3);
         items = new ArrayList<>();
 
         adapter = new ArrayAdapter<ListItem>(this, R.layout.activity_history_item, R.id.textView, items) {
@@ -78,6 +84,7 @@ public class HistoryActivity extends AppCompatActivity implements HttpRequest.On
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long l) {
+                if (isShowing) return;
                 Log.d(TAG, "position " + position);
                 Bitmap imageBitMap = null;
                 int count = 0;
@@ -89,30 +96,20 @@ public class HistoryActivity extends AppCompatActivity implements HttpRequest.On
                     count += 1;
                 }
                 String base64 = bitmapToBase64(imageBitMap);
-                Intent intent = new Intent(HistoryActivity.this, ViewImageActivity.class);
-                // Pass the imageBase64 as an extra in the Intent
-                intent.putExtra("image", base64);
                 Log.d(TAG, "base64 " + base64);
-
-
-                // Start the ViewImageActivity
-                startActivity(intent);
+                isShowing = true;
+                listView.setClickable(false);
+                ShowImage.setImageBitmap(imageBitMap);
+                //Zoom animation
+                ObjectAnimator scaleAnimatorX = ObjectAnimator.ofFloat(ShowImage, "scaleX", .1f, 1.2f, 1f);
+                ObjectAnimator scaleAnimatorY = ObjectAnimator.ofFloat(ShowImage, "scaleY", .1f, 1.2f, 1f);
+                //Start all the animations
+                AnimatorSet animatorSet = new AnimatorSet();
+                animatorSet.playTogether(scaleAnimatorX, scaleAnimatorY);
+                animatorSet.setInterpolator(new AccelerateDecelerateInterpolator());
+                animatorSet.start();
             }
         });
-    }
-    private Bitmap drawableToBitmap(Drawable drawable) {
-        if (drawable instanceof BitmapDrawable) {
-            return ((BitmapDrawable) drawable).getBitmap();
-        }
-
-        int width = drawable.getIntrinsicWidth();
-        int height = drawable.getIntrinsicHeight();
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        drawable.draw(canvas);
-
-        return bitmap;
     }
     private String bitmapToBase64(Bitmap bitmap) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -120,7 +117,32 @@ public class HistoryActivity extends AppCompatActivity implements HttpRequest.On
         byte[] byteArray = byteArrayOutputStream.toByteArray();
         return Base64.encodeToString(byteArray, Base64.DEFAULT);
     }
+    @Override
+    public void onBackPressed(){
+        if (isShowing) {
 
+            //Zoom animation
+            ObjectAnimator scaleAnimatorX = ObjectAnimator.ofFloat(ShowImage, "scaleX", 1f, 1.2f, 0.01f);
+            ObjectAnimator scaleAnimatorY = ObjectAnimator.ofFloat(ShowImage, "scaleY", 1f, 1.2f, 0.1f);
+            //Start all the animations
+            AnimatorSet animatorSet = new AnimatorSet();
+            animatorSet.playTogether(scaleAnimatorX, scaleAnimatorY);
+            animatorSet.setInterpolator(new AccelerateDecelerateInterpolator());
+            animatorSet.start();
+            final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        ShowImage.setImageBitmap(null);
+                        listView.setClickable(true);
+                        isShowing = false;
+                    }
+                }, 300);
+        } else {
+            super.onBackPressed();
+        }
+    }
     @Override
     public void onResponseReceived(String response) {
         // Handle the received response here
@@ -130,24 +152,32 @@ public class HistoryActivity extends AppCompatActivity implements HttpRequest.On
             try {
                 // Create a JSONObject from the response string
                 JSONObject json = new JSONObject(response);
-
                 // Access the value of the 'image' key
                 // Get the keys from the JSON object
                 Iterator<String> keys = json.keys();
 
+                // Create a temporary list to store the items in reverse order
+                List<ListItem> reverseItems = new ArrayList<>();
+
                 // Iterate over the keys and access the images
                 while (keys.hasNext()) {
                     String key = keys.next();
-                    String imageBase64 = json.getString(key);
+                    JSONObject image_classification = json.getJSONObject(key);
+
+                    String imageBase64 = image_classification.getString("Image");
+                    String classification = image_classification.getString("Classification");
 
                     byte[] bytes = Base64.decode(imageBase64, Base64.DEFAULT);
 
                     // Initialize bitmap
                     Bitmap decodedByte = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 
-                    // Add the item to the list
-                    items.add(new ListItem(decodedByte, key));
+                    // Add the item to the temporary list in reverse order
+                    reverseItems.add(0, new ListItem(decodedByte, classification));
                 }
+
+                // Add the items from the temporary list to the original list
+                items.addAll(reverseItems);
 
 
                 // Notify the adapter that the data has changed

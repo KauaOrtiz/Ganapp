@@ -8,6 +8,7 @@ import java.io.IOException;
 import okhttp3.*;
 
 public class FileUploader {
+    private static final String SERVER_URL = "http://10.229.3.140:8080";
 
     public static void uploadFile(String filePath, Toast toast) {
         OkHttpClient client = new OkHttpClient();
@@ -26,10 +27,9 @@ public class FileUploader {
         System.out.println("\n\n\n--------------\n\n\n------------\nChegou aqui \n\n\n--------------\n\n\n------------");
 
         Request request = new Request.Builder()
-                .url("http://192.168.2.102:8080/createImage")
+                .url(SERVER_URL + "/createImage")
                 .post(requestBody)
                 .build();
-        System.out.println("\n\n\n--------------\n\n\n------------\nVishhhh aqui \n\n\n--------------\n\n\n------------" + new File(filePath).getName());
 
 
         // Execute the request
