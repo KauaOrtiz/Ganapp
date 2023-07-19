@@ -2,6 +2,7 @@ package com.example.ganapp;
 
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,7 +21,7 @@ import java.util.Map;
 public class HttpRequest extends AsyncTask<Void, Void, String> {
 
     private static final String TAG = "HttpRequestGetHistory";
-    private static final String SERVER_URL = "http://192.168.2.101:8080/";
+    private static final String SERVER_URL = "http://10.229.3.140:8080";
     private static final String BOUNDARY = "/---------------------------/";
     private static final String LINE_FEED = "\r\n";
     private OnResponseReceivedListener listener;
@@ -31,7 +32,7 @@ public class HttpRequest extends AsyncTask<Void, Void, String> {
     @Override
     protected String doInBackground(Void... voids) {
         try {
-            URL url = new URL(SERVER_URL + "getUserImages?name=Rafael");
+            URL url = new URL(SERVER_URL + "/getUserImages?name=Rafael");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
 

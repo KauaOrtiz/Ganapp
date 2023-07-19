@@ -27,6 +27,13 @@
                 android:value="" />
         </activity>
         <activity
+            android:name=".ViewImageActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".HistoryActivity"
             android:exported="false">
             <meta-data
